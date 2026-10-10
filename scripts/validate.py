@@ -24,6 +24,9 @@ errors=[];paths=[ROOT/'index.html',*sorted(ROOT.glob('*/index.html'))]
 guide_slugs={p.parent.name for p in paths if p.parent.name.startswith('best-')}
 baseline=set(json.loads((ROOT/'scripts/guide-baseline.json').read_text()))
 if guide_slugs!=baseline:errors.append('Guide URL set changed; review baseline deliberately, do not silently remove pages.')
+home=Page();home.feed((ROOT/'index.html').read_text())
+home_guides={urlsplit(href).path.strip('/') for href in home.links if href.startswith('/best-')}
+if home_guides!=guide_slugs:errors.append('Homepage must link every preserved guide; malformed or missing cards block release.')
 urls=[]
 for path in paths:
     raw=path.read_text();page=Page();page.feed(raw)
@@ -34,6 +37,7 @@ for path in paths:
     loaders=[s for s in page.scripts if s['attrs'].get('src','').startswith('/assets/analytics.js')]
     if len(loaders)!=1:errors.append(f'{slug}: expected one consent-aware loader')
     if 'googletagmanager.com' in raw or re.search(r'\bgtag\s*\(',raw):errors.append(f'{slug}: direct analytics bypasses consent loader')
+    if 'B0C1234567' in raw:errors.append(f'{slug}: placeholder merchant destination')
     for script in page.scripts:
         if script['attrs'].get('type')=='application/ld+json':
             try:json.loads(script['body'])
