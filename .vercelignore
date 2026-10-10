@@ -1,0 +1,6 @@
+.git
+.github
+scripts
+build.py
+README.md
+__pycache__
